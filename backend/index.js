@@ -90,9 +90,15 @@ io.on('connection', (socket) => {
     socket.on('message', ({ data, status, reciever }) => {
         // console.log(typeof(reciever), typeof(userId), typeof(data));
         console.log(socket.id, data, status, reciever);
+        console.log("here1");
         
         // Convert reciever to a string if it's not already
         const recieverString = reciever.toString();
+
+        for (const [key, value] of sockettouser) {
+            console.log(`${key}: ${value}`);
+            console.log(typeof(key), typeof(value));
+        };
         
         // Retrieve the recipient's socket ID from the sockettouser map
         let recipientSocketId;
@@ -106,7 +112,7 @@ io.on('connection', (socket) => {
 
 
 
-                if(t == '1'){
+                if(t==true){
                     console.log('inside the message');
                     io.to(value).emit('message', data);
                 }else{
@@ -120,17 +126,20 @@ io.on('connection', (socket) => {
             // console.log(`${key}: ${value}`);
            
         }
+
         
         
         
     });
    
     // Handle status updates
-    socket.on('status', (status) => {
+    socket.on('status', ({status}) => {
         // Update status in the socketStatus map
-        socketStatus.set(socket.id, status.st);
-        console.log(userId, sockettouser.get(userId), status.st);
+        // socketStatus[socket.id] = status;
+        socketStatus.set(socket.id, status);
+        console.log(userId, sockettouser.get(userId), status);
     });
+
 });
 
 
