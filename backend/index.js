@@ -43,6 +43,17 @@ const sockettouser= new Map();
 
 
 
+async function getLLMResponse(prompt) {
+    return new Promise((resolve) => {
+    const timeout = Math.random() * (15000 - 5000) + 5000;
+    setTimeout(() => {
+    resolve('This is a mock response from the LLM based on user input');
+    }, timeout);
+    });
+};
+
+
+
 
 io.on('connection', (socket) => {
     console.log('New client connected');
@@ -62,6 +73,10 @@ io.on('connection', (socket) => {
         console.log(`${key}: ${value}`);
         console.log(typeof(key), typeof(value));
     }
+     for (const [key, value] of socketStatus) {
+        console.log(`${key}: ${value}`);
+        console.log(typeof(key), typeof(value));    
+    }
 
     // Handle disconnection
     socket.on('disconnect', () => {
@@ -73,7 +88,7 @@ io.on('connection', (socket) => {
 
     // Handle incoming messages
     socket.on('message', ({ data, status, reciever }) => {
-        console.log(typeof(reciever), typeof(userId), typeof(data));
+        // console.log(typeof(reciever), typeof(userId), typeof(data));
         console.log(socket.id, data, status, reciever);
         
         // Convert reciever to a string if it's not already
@@ -82,25 +97,32 @@ io.on('connection', (socket) => {
         // Retrieve the recipient's socket ID from the sockettouser map
         let recipientSocketId;
         for (const [key, value] of sockettouser) {
-            console.log(key, recieverString);
-            if(key=="'"+recieverString+"'"){
+            console.log(key);
+            if(key=="'"+recieverString+"'" ){
                 console.log("found");
-                io.to(value).emit('message', data);
+                 
+                let t=socketStatus.get(value);
+                console.log(typeof(t), t);  
+
+
+
+                if(t == '1'){
+                    console.log('inside the message');
+                    io.to(value).emit('message', data);
+                }else{
+                    
+                    getLLMResponse("how are you")
+                      .then(response => io.to(socket.id).emit('message', response));
+
+                }
+                
             }
-            console.log(`${key}: ${value}`);
-            console.log(typeof(key), typeof(value));
+            // console.log(`${key}: ${value}`);
+           
         }
-        console.log(recieverString, sockettouser[recieverString],sockettouser.get("sushant"));
         
         
-        // Check if recipient's socket ID exists
-        if (recipientSocketId) {
-            // Emit the message to the recipient
-            io.to(recipientSocketId).emit('message', data);
-        } else {
-            console.log('Recipient not found or not connected');
-            // Handle the case when the recipient is not found
-        }
+        
     });
    
     // Handle status updates
