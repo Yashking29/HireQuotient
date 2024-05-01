@@ -38,24 +38,88 @@ connectDb();
 // });
 
 
-const myMap = new Map();
+const socketStatus = new Map();
+const sockettouser= new Map();
 
 
 
 
 io.on('connection', (socket) => {
     console.log('New client connected');
-    myMap.set(socket.id, socket);
+    console.log(typeof(socket.id));
+    
+    const userId = socket.handshake.query.userId;
+    const initialStatus = socket.handshake.query.status;
+    console.log('User ID:', userId);
+    console.log('Status', initialStatus);
 
+    // Store user ID and socket ID in the maps
+    sockettouser.set(userId, socket.id);
+    socketStatus.set(socket.id, initialStatus);
+
+    // Debugging: Output the contents of the sockettouser map
+    for (const [key, value] of sockettouser) {
+        console.log(`${key}: ${value}`);
+        console.log(typeof(key), typeof(value));
+    }
+
+    // Handle disconnection
     socket.on('disconnect', () => {
+        // Remove user ID and socket ID from the maps on disconnect
+        sockettouser.delete(userId);
+        socketStatus.delete(socket.id);
         console.log('Client disconnected');
     });
 
-    socket.on('message', (data) => {
-        console.log(socket.id, data);
-        io.emit('message', data); // Broadcast message to all clients
+    // Handle incoming messages
+    socket.on('message', ({ data, status, reciever }) => {
+        console.log(typeof(reciever), typeof(userId), typeof(data));
+        console.log(socket.id, data, status, reciever);
+        
+        // Convert reciever to a string if it's not already
+        const recieverString = reciever.toString();
+        
+        // Retrieve the recipient's socket ID from the sockettouser map
+        let recipientSocketId;
+        for (const [key, value] of sockettouser) {
+            console.log(key, recieverString);
+            if(key=="'"+recieverString+"'"){
+                console.log("found");
+                io.to(value).emit('message', data);
+            }
+            console.log(`${key}: ${value}`);
+            console.log(typeof(key), typeof(value));
+        }
+        console.log(recieverString, sockettouser[recieverString],sockettouser.get("sushant"));
+        
+        
+        // Check if recipient's socket ID exists
+        if (recipientSocketId) {
+            // Emit the message to the recipient
+            io.to(recipientSocketId).emit('message', data);
+        } else {
+            console.log('Recipient not found or not connected');
+            // Handle the case when the recipient is not found
+        }
+    });
+   
+    // Handle status updates
+    socket.on('status', (status) => {
+        // Update status in the socketStatus map
+        socketStatus.set(socket.id, status.st);
+        console.log(userId, sockettouser.get(userId), status.st);
     });
 });
+
+
+
+
+
+
+
+
+
+
 
 server.listen(process.env.PORT, () => {
     console.log(`Server running on port ${process.env.PORT}`);
