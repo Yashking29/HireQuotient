@@ -5,6 +5,7 @@ import http from 'http';
 import { Server } from 'socket.io';
 import authRoutes from './routes/auth.routes.js';
 import cookieParser from 'cookie-parser';
+import chatRoutes from './routes/chat.routes.js';
 
 dotenv.config();
 
@@ -12,7 +13,8 @@ const app = express();
 
 app.use(express.json());
 app.use(cookieParser());
-app.use('/', authRoutes);
+// app.use('/', authRoutes);
+app.use('/',chatRoutes);
 
 
 app.get('/test', (req, res) => {
