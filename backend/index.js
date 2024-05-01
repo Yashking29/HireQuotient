@@ -3,10 +3,21 @@ import dotenv from 'dotenv';
 import connectDb from './db/connectDb.js';
 import http from 'http';
 import { Server } from 'socket.io';
+import authRoutes from './routes/auth.routes.js';
+import cookieParser from 'cookie-parser';
 
 dotenv.config();
 
 const app = express();
+
+app.use(express.json());
+app.use(cookieParser());
+app.use('/', authRoutes);
+
+
+app.get('/test', (req, res) => {
+    res.send('API is running...');
+});
 
 
 const server = http.createServer(app);
@@ -27,8 +38,14 @@ connectDb();
 // });
 
 
+const myMap = new Map();
+
+
+
+
 io.on('connection', (socket) => {
     console.log('New client connected');
+    myMap.set(socket.id, socket);
 
     socket.on('disconnect', () => {
         console.log('Client disconnected');
