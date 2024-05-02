@@ -6,6 +6,9 @@ import { Server } from 'socket.io';
 import authRoutes from './routes/auth.routes.js';
 import cookieParser from 'cookie-parser';
 import chatRoutes from './routes/chat.routes.js';
+import OpenAI from "openai";
+
+const openai = new OpenAI({apiKey: `${process.env.OPENAI_API_KEY}` } );
 
 dotenv.config();
 
@@ -54,6 +57,22 @@ async function getLLMResponse(prompt) {
     });
 };
 
+async function getGptResponse(prompt){
+    const stream = await openai.chat.completions.create({
+        model: "gpt-4",
+        messages: [{ role: "user", content: `${prompt}` }],
+        stream: true,
+    });
+
+    let response = ""; // Accumulate response chunks
+
+    for await (const chunk of stream) {
+        response += chunk.choices[0]?.delta?.content || "";
+    }
+    
+    return response;
+}
+
 
 
 
@@ -71,14 +90,14 @@ io.on('connection', (socket) => {
     socketStatus.set(socket.id, initialStatus);
 
     // Debugging: Output the contents of the sockettouser map
-    for (const [key, value] of sockettouser) {
-        console.log(`${key}: ${value}`);
-        console.log(typeof(key), typeof(value));
-    }
-     for (const [key, value] of socketStatus) {
-        console.log(`${key}: ${value}`);
-        console.log(typeof(key), typeof(value));    
-    }
+    // for (const [key, value] of sockettouser) {
+    //     console.log(`${key}: ${value}`);
+    //     console.log(typeof(key), typeof(value));
+    // }
+    //  for (const [key, value] of socketStatus) {
+    //     console.log(`${key}: ${value}`);
+    //     console.log(typeof(key), typeof(value));    
+    // }
 
     // Handle disconnection
     socket.on('disconnect', () => {
@@ -119,8 +138,10 @@ io.on('connection', (socket) => {
                     io.to(value).emit('message', data);
                 }else{
                     
-                    getLLMResponse("how are you")
+                    getGptResponse(data)
                       .then(response => io.to(socket.id).emit('message', response));
+
+                      
 
                 }
                 
@@ -143,14 +164,6 @@ io.on('connection', (socket) => {
     });
 
 });
-
-
-
-
-
-
-
-
 
 
 
