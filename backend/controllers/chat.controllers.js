@@ -26,24 +26,24 @@ export const getMessagesBetweenUsers = async (req, res) => {
 
 
 export const createMessage = async (req, res) => {
-    const { userId1, userId2, message } = req.body;
+    const { senderId, recieverId, message } = req.body;
 
     try {
         // Find or create a chat document for the sender and recipient
         let chat = await Chat.findOne({
-            participants: { $all: [userId1, userId2] }
+            participants: { $all: [senderId, recieverId] }
         });
 
         if (!chat) {
             // If the chat document does not exist, create a new one
             chat = new Chat({
-                participants: [userId1, userId2],
+                participants: [senderId, recieverId],
                 messages: []
             });
         }
 
         // Append the new message to the chat
-        chat.messages.push({ sender: userId1, text: message });
+        chat.messages.push({ sender: senderId, text: message });
 
         // Save the chat document
         await chat.save();

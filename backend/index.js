@@ -97,10 +97,10 @@ io.on('connection', (socket) => {
         // Convert reciever to a string if it's not already
         const recieverString = reciever.toString();
 
-        for (const [key, value] of sockettouser) {
-            console.log(`${key}: ${value}`);
-            console.log(typeof(key), typeof(value));
-        };
+        // for (const [key, value] of sockettouser) {
+        //     console.log(`${key}: ${value}`);
+        //     console.log(typeof(key), typeof(value));
+        // };
         
         // Retrieve the recipient's socket ID from the sockettouser map
         let recipientSocketId;
